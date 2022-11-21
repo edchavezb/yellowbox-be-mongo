@@ -5,8 +5,8 @@ const routes = Router();
 
 routes.get("/", async (req, res) => {
   try {
-    const { userId } = req.query;
-    const userData: IUser | null = await UserModel.findOne({ _id: userId as string }).exec();
+    const { spotifyId } = req.query;
+    const userData: IUser | null = await UserModel.findOne({ services: {spotify: spotifyId as string} }).exec();
     return res.json(userData);
   } catch (error) {
     console.error(error);

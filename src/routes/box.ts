@@ -6,7 +6,7 @@ const routes = Router();
 routes.get("/", async (req, res) => {
   try {
     const { userId } = req.query;
-    const boxes: IUserBox[] = await BoxModel.find({ creator: 'eKDNF346'}).exec();
+    const boxes: IUserBox[] = await BoxModel.find({creator: userId as string}).exec();
     return res.json(boxes);
   } catch (error) {
     console.error(error);
