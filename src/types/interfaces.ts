@@ -1,9 +1,9 @@
-interface User {
+export interface User {
     auth: UserAuth
     userData: UserData
   }
   
-  interface UserData {
+  export interface UserData {
     displayName: string
     userId: string
     uri: string
@@ -11,12 +11,12 @@ interface User {
     email: string
   }
   
-  interface UserAuth {
+  export interface UserAuth {
     code: string | null
     refreshToken: string | null
   }
   
-  interface UserBox {
+  export interface UserBox {
     id: string
     name: string
     public: boolean
@@ -26,17 +26,19 @@ interface User {
     albums: Album[]
     tracks: Track[]
     playlists: Playlist[]
-    sectionSorting: {
-      artists: Sorting
-      albums: Sorting
-      tracks: Sorting
-      playlists: Sorting
-    }
+    sectionSorting: SectionSorting
     sectionVisibility: Visibility
     subSections : {type: string, name: string}[]
   }
+
+  export interface SectionSorting {
+    artists: Sorting
+    albums: Sorting
+    tracks: Sorting
+    playlists: Sorting
+  }
   
-  interface Sorting {
+  export interface Sorting {
     primarySorting: string
     secondarySorting: string
     view: string
@@ -44,20 +46,20 @@ interface User {
     displaySubSections: boolean
   }
   
-  interface Visibility {
+  export interface Visibility {
     artists: boolean
     albums: boolean
     tracks: boolean
     playlists: boolean
   }
   
-  interface UpdateBoxPayload {
+  export interface UpdateBoxPayload {
     updatedBox: UserBox
     targetIndex?: number
     targetId?: string
   }
   
-  interface Album {
+  export interface Album {
     album_type: string
     artists: Artist[]
     external_urls: {
@@ -82,7 +84,7 @@ interface User {
     subSection?: string
   }
   
-  interface Artist {
+  export interface Artist {
     external_urls: {
       spotify: string
     }
@@ -96,7 +98,7 @@ interface User {
     subSection?: string
   }
   
-  interface Track {
+  export interface Track {
     album?: Album
     artists: Artist[]
     duration_ms: number
@@ -114,7 +116,7 @@ interface User {
     subSection?: string 
   }
   
-  interface Playlist {
+  export interface Playlist {
     description: string
     external_urls: {
       spotify: string
@@ -137,7 +139,7 @@ interface User {
     subSection?: string 
   }
   
-  interface SpotifyUser {
+  export interface SpotifyUser {
     display_name?: string
     external_urls: {
       spotify: string
@@ -148,7 +150,7 @@ interface User {
     uri: string
   }
   
-  interface PlaylistItem {
+  export interface PlaylistItem {
     added_at: string
     added_by: SpotifyUser
     is_local: boolean
@@ -156,20 +158,16 @@ interface User {
     track: any // TODO: Hey bro you need to do something here
   }
   
-  interface ItemImage {
+  export interface ItemImage {
     height?: number | null
     url: string
     width?: number | null
   }
   
-  interface ModalState {
+  export interface ModalState {
     itemData?: Artist | Album | Track | Playlist
     visible: boolean
     type: string
     boxId: string
     page: string
   }
-
-  //Adding a comment to trigger deploy
-  
-  export type { User, UserBox, Visibility, Sorting, UpdateBoxPayload, Artist, Album, Track, Playlist, SpotifyUser, PlaylistItem, ItemImage, ModalState }
