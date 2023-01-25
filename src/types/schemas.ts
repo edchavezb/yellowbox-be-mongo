@@ -3,19 +3,19 @@ import { Schema } from "mongoose";
 export const ArtistSchema = new Schema({
     external_urls: {
         spotify: String
-      },
-      genres: [String],
-      id: String,
-      images: [{
-          height: Number,
-          url: String,
-          width: Number,
-      }],
-      name: String,
-      popularity: Number,
-      type: {type: String},
-      uri: String,
-      subSection: String,
+    },
+    genres: [String],
+    id: String,
+    images: [{
+        height: Number,
+        url: String,
+        width: Number,
+    }],
+    name: String,
+    popularity: Number,
+    type: { type: String },
+    uri: String,
+    subSection: String,
 })
 
 export const AlbumSchema = new Schema({
@@ -29,7 +29,7 @@ export const AlbumSchema = new Schema({
         width: Number,
     }],
     name: String,
-    type: {type: String},
+    type: { type: String },
     uri: String,
     subSection: String,
     album_type: String,
@@ -53,7 +53,7 @@ export const TrackSchema = new Schema({
     },
     id: String,
     name: String,
-    type: {type: String},
+    type: { type: String },
     uri: String,
     subSection: String,
     artists: [ArtistSchema],
@@ -71,7 +71,7 @@ export const PlaylistSchema = new Schema({
     },
     id: String,
     name: String,
-    type: {type: String},
+    type: { type: String },
     uri: String,
     subSection: String,
     description: String,
@@ -83,11 +83,11 @@ export const PlaylistSchema = new Schema({
     owner: {
         display_name: String,
         external_urls: {
-          spotify: String
+            spotify: String
         },
         href: String,
         id: String,
-        type: {type: String},
+        type: { type: String },
         uri: String,
     },
     tracks: {
@@ -97,11 +97,11 @@ export const PlaylistSchema = new Schema({
             added_by: {
                 display_name: String,
                 external_urls: {
-                  spotify: String
+                    spotify: String
                 },
                 href: String,
                 id: String,
-                type: {type: String},
+                type: { type: String },
                 uri: String,
             },
             is_local: Boolean,
@@ -126,8 +126,8 @@ export const SortingSchema = new Schema({
 
 export const BoxSchema = new Schema({
     name: {
-      type: String,
-      unique: false,
+        type: String,
+        unique: false,
     },
     public: Boolean,
     creator: {
@@ -140,20 +140,23 @@ export const BoxSchema = new Schema({
     tracks: [TrackSchema],
     playlists: [PlaylistSchema],
     sectionSorting: {
-      artists: SortingSchema,
-      albums: SortingSchema,
-      tracks: SortingSchema,
-      playlists: SortingSchema,
+        artists: SortingSchema,
+        albums: SortingSchema,
+        tracks: SortingSchema,
+        playlists: SortingSchema,
     },
     sectionVisibility: {
-      artists: Boolean,
-      albums: Boolean,
-      tracks: Boolean,
-      playlists: Boolean
+        artists: Boolean,
+        albums: Boolean,
+        tracks: Boolean,
+        playlists: Boolean
     },
     subSections: [
-      {type: {type: String}, name: String}
+        { type: { type: String }, name: String }
     ],
+    notes: [
+        { itemId: { type: Schema.Types.ObjectId }, noteText: String }
+    ]
 });
 
 export const UserSchema = new Schema({

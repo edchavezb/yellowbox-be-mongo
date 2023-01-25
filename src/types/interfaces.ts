@@ -28,7 +28,8 @@ export interface User {
     playlists: Playlist[]
     sectionSorting: SectionSorting
     sectionVisibility: Visibility
-    subSections : {type: string, name: string}[]
+    subSections: {type: string, name: string}[]
+    notes: {itemId: string, noteText: string}[]
   }
 
   export interface SectionSorting {
