@@ -64,4 +64,84 @@ routes.put("/:boxId/sectionSorting", async (req, res) => {
   }
 });
 
+// Delete an artist from a box
+routes.delete("/:boxId/artists/:itemId", async (req, res) => {
+  try {
+    const { boxId, itemId } = req.params;
+    const updatedBox: IUserBox | null = await BoxModel.findByIdAndUpdate(
+      boxId,
+      {
+        $pull: {
+          artists: { _id: itemId }
+        }
+      },
+      {new: true}
+    ).exec();
+    return res.status(201).json(updatedBox?.artists);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
+// Delete an album from a box
+routes.delete("/:boxId/albums/:itemId", async (req, res) => {
+  try {
+    const { boxId, itemId } = req.params;
+    const updatedBox: IUserBox | null = await BoxModel.findByIdAndUpdate(
+      boxId,
+      {
+        $pull: {
+          albums: { _id: itemId }
+        }
+      },
+      {new: true}
+    ).exec();
+    return res.status(201).json(updatedBox?.albums);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
+// Delete a track from a box
+routes.delete("/:boxId/tracks/:itemId", async (req, res) => {
+  try {
+    const { boxId, itemId } = req.params;
+    const updatedBox: IUserBox | null = await BoxModel.findByIdAndUpdate(
+      boxId,
+      {
+        $pull: {
+          tracks: { _id: itemId }
+        }
+      },
+      {new: true}
+    ).exec();
+    return res.status(201).json(updatedBox?.tracks);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
+// Delete a playlist from a box
+routes.delete("/:boxId/playlists/:itemId", async (req, res) => {
+  try {
+    const { boxId, itemId } = req.params;
+    const updatedBox: IUserBox | null = await BoxModel.findByIdAndUpdate(
+      boxId,
+      {
+        $pull: {
+          playlists: { _id: itemId }
+        }
+      },
+      {new: true}
+    ).exec();
+    return res.status(201).json(updatedBox?.playlists);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
 export default routes;
