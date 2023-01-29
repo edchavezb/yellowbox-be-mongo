@@ -144,4 +144,24 @@ routes.delete("/:boxId/playlists/:itemId", async (req, res) => {
   }
 });
 
+// Add a note to the notes in a box
+routes.post("/:boxId/notes", async (req, res) => {
+  try {
+    const { boxId } = req.params;
+    const updatedBox: IUserBox | null = await BoxModel.findByIdAndUpdate(
+      boxId,
+      {
+        $push: {
+          notes: req.body
+        }
+      },
+      {new: true}
+    ).exec();
+    return res.status(201).json(updatedBox?.notes);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
 export default routes;

@@ -155,7 +155,7 @@ export const BoxSchema = new Schema({
         { type: { type: String }, name: String }
     ],
     notes: [
-        { itemId: { type: Schema.Types.ObjectId }, noteText: String }
+        { itemId: String, noteText: String }
     ]
 });
 
