@@ -152,10 +152,36 @@ routes.post("/:boxId/notes", async (req, res) => {
       boxId,
       {
         $push: {
-          notes: req.body
+          notes: req.body 
         }
       },
-      {new: true}
+      {
+        new: true
+      }
+    ).exec();
+    return res.status(201).json(updatedBox?.notes);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
+// Edit a note in a box
+routes.put("/:boxId/notes/:itemId", async (req, res) => {
+  try {
+    const { boxId, itemId } = req.params;
+    const { noteText } = req.body;
+    const updatedBox: IUserBox | null = await BoxModel.findByIdAndUpdate(
+      boxId,
+      {
+        $set: {
+          "notes.$[elem].noteText" : noteText 
+        }
+      },
+      {
+        arrayFilters: [ { "elem.itemId": itemId } ],
+        new: true
+      }
     ).exec();
     return res.status(201).json(updatedBox?.notes);
   } catch (error) {
