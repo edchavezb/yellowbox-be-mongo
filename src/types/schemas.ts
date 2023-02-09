@@ -152,7 +152,7 @@ export const BoxSchema = new Schema({
         playlists: Boolean
     },
     subSections: [
-        { type: { type: String }, name: String }
+        { type: { type: String }, name: String, index: Number }
     ],
     notes: [
         { itemId: String, noteText: String }
