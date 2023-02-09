@@ -190,4 +190,50 @@ routes.put("/:boxId/notes/:itemId", async (req, res) => {
   }
 });
 
+// Add a subsection to a box
+routes.post("/:boxId/subsections", async (req, res) => {
+  try {
+    const { boxId } = req.params;
+    const updatedBox: IUserBox | null = await BoxModel.findByIdAndUpdate(
+      boxId,
+      {
+        $push: {
+          subSections: req.body 
+        }
+      },
+      {
+        new: true
+      }
+    ).exec();
+    return res.status(201).json(updatedBox?.subSections);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
+// Edit a subsection's name
+routes.put("/:boxId/subsections/:subsectionId", async (req, res) => {
+  try {
+    const { boxId, subsectionId } = req.params;
+    const { name } = req.body 
+    const updatedBox: IUserBox | null = await BoxModel.findByIdAndUpdate(
+      boxId,
+      {
+        $set: {
+          "subSections.$[elem].name" : name
+        }
+      },
+      {
+        arrayFilters: [ { "elem._id": subsectionId } ],
+        new: true
+      }
+    ).exec();
+    return res.status(201).json(updatedBox?.subSections);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
 export default routes;
