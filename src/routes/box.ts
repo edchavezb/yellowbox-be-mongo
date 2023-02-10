@@ -236,4 +236,37 @@ routes.put("/:boxId/subsections/:subsectionId", async (req, res) => {
   }
 });
 
+// Delete a subsection
+routes.delete("/:boxId/subsections/:subsectionId", async (req, res) => {
+  try {
+    const { boxId, subsectionId } = req.params;
+    const { section } = req.query;
+    await BoxModel.findByIdAndUpdate(
+      boxId,
+      {
+        $pull: {
+          subSections: { _id: subsectionId }
+        }
+      },
+      {new: true}
+    ).exec();
+    const updatedBox: IUserBox | null = await BoxModel.findByIdAndUpdate(
+      boxId,
+      {
+        $unset: {
+          [`${section}.$[elem].subSection`]: ""
+        }
+      },
+      {
+        arrayFilters: [ { "elem.subSection": subsectionId } ],
+        new: true
+      }
+    ).exec();
+    return res.status(201).json(updatedBox);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
 export default routes;
