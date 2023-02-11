@@ -121,6 +121,7 @@ export const SortingSchema = new Schema({
     secondarySorting: String,
     view: String,
     ascendingOrder: Boolean,
+    displayGrouping: Boolean,
     displaySubSections: Boolean
 })
 

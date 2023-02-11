@@ -44,6 +44,7 @@ export interface User {
     secondarySorting: string
     view: string
     ascendingOrder: boolean
+    displayGrouping: boolean
     displaySubSections: boolean
   }
   
