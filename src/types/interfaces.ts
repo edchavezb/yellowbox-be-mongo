@@ -83,7 +83,7 @@ export interface User {
     }
     type: string
     uri: string
-    subSection?: string
+    subSectionCount?: number
   }
   
   export interface Artist {
@@ -97,7 +97,7 @@ export interface User {
     popularity?: number
     type: string
     uri: string
-    subSection?: string
+    subSectionCount?: number
   }
   
   export interface Track {
@@ -115,7 +115,7 @@ export interface User {
     track_number: number
     type: string
     uri: string
-    subSection?: string 
+    subSectionCount?: number 
   }
   
   export interface Playlist {
@@ -138,7 +138,7 @@ export interface User {
     }
     type: string
     uri: string
-    subSection?: string 
+    subSectionCount?: number 
   }
   
   export interface SpotifyUser {

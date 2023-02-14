@@ -1,4 +1,4 @@
-import { Schema } from "mongoose";
+import { Schema, SchemaTypes } from "mongoose";
 
 export const ArtistSchema = new Schema({
     external_urls: {
@@ -15,7 +15,7 @@ export const ArtistSchema = new Schema({
     popularity: Number,
     type: { type: String },
     uri: String,
-    subSection: String,
+    subSectionCount: Number,
 })
 
 export const AlbumSchema = new Schema({
@@ -31,7 +31,7 @@ export const AlbumSchema = new Schema({
     name: String,
     type: { type: String },
     uri: String,
-    subSection: String,
+    subSectionCount: Number,
     album_type: String,
     artists: [ArtistSchema],
     release_date: String,
@@ -55,7 +55,7 @@ export const TrackSchema = new Schema({
     name: String,
     type: { type: String },
     uri: String,
-    subSection: String,
+    subSectionCount: Number,
     artists: [ArtistSchema],
     album: AlbumSchema,
     duration_ms: Number,
@@ -73,7 +73,7 @@ export const PlaylistSchema = new Schema({
     name: String,
     type: { type: String },
     uri: String,
-    subSection: String,
+    subSectionCount: Number,
     description: String,
     images: [{
         height: Number,
@@ -153,7 +153,7 @@ export const BoxSchema = new Schema({
         playlists: Boolean
     },
     subSections: [
-        { type: { type: String }, name: String, index: Number }
+        { type: { type: String }, name: String, index: Number, items: { type: [SchemaTypes.Mixed] } }
     ],
     notes: [
         { itemId: String, noteText: String }
