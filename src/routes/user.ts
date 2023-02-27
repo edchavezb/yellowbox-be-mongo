@@ -33,7 +33,10 @@ routes.post("/", async (req, res) => {
 routes.get("/:userId/boxes", async (req, res) => {
   try {
     const { userId } = req.params;
-    const boxes: IUserBox[] = await BoxModel.find({creator: userId as string}).exec();
+    const boxes: IUserBox[] = await BoxModel.find(
+      {$or: [{creator: userId as string, isDeletedByUser: false}, {creator: userId as string, isDeletedByUser: { $exists : false }}]},
+      {isDeletedByUser: 0}
+    ).exec();
     return res.json(boxes);
   } catch (error) {
     console.error(error);

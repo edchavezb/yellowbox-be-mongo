@@ -131,6 +131,7 @@ export const BoxSchema = new Schema({
         unique: false,
     },
     public: Boolean,
+    isDeletedByUser: Boolean,
     creator: {
         type: Schema.Types.ObjectId,
         ref: "User"

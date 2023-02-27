@@ -8,8 +8,11 @@ const routes = Router();
 routes.get("/", async (req, res) => {
   try {
     const { boxId } = req.query;
-    const box: IUserBox | null = await BoxModel.findOne({_id: boxId as string}).exec();
-    return res.json(box);
+    const box: IUserBox | null = await BoxModel.findOne(
+      {$or: [{_id: boxId as string, isDeletedByUser: false}, {_id: boxId as string, isDeletedByUser: { $exists : false }}]},
+      {isDeletedByUser: 0}
+    ).exec();
+    return res.status(201).json(box);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Sorry, something went wrong :/" });
@@ -20,7 +23,6 @@ routes.get("/", async (req, res) => {
 routes.post("/", async (req, res) => {
   try {
     const userBox: Omit<IUserBox, "_id"> = req.body;
-
     const newBox = await BoxModel.create(userBox);
     return res.status(201).json(newBox);
   } catch (error) {
@@ -37,7 +39,24 @@ routes.put("/:boxId", async (req, res) => {
 
     const updatedBox: IUserBox | null = await BoxModel.findOneAndReplace(
       {_id: boxId as string},
-      replacementBox
+      replacementBox,
+      {new: true}
+    ).exec();
+    return res.status(201).json(updatedBox);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
+// Delete a box
+routes.delete("/:boxId", async (req, res) => {
+  try {
+    const { boxId } = req.params;
+    const updatedBox = await BoxModel.findOneAndUpdate(
+      {_id: boxId as string},
+      {isDeletedByUser: true},
+      {new: true}
     ).exec();
     return res.status(201).json(updatedBox);
   } catch (error) {
