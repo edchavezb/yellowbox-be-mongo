@@ -519,6 +519,28 @@ routes.post("/:boxId/subsections", async (req, res) => {
   }
 });
 
+// Update a box's subsections
+routes.put("/:boxId/subsections", async (req, res) => {
+  try {
+    const { boxId } = req.params;
+    const updatedBox: IUserBox | null = await BoxModel.findByIdAndUpdate(
+      boxId,
+      {
+        $set: {
+          subSections: req.body 
+        }
+      },
+      {
+        new: true
+      }
+    ).exec();
+    return res.status(201).json(updatedBox?.subSections);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
 // Edit a subsection's name
 routes.put("/:boxId/subsections/:subsectionId", async (req, res) => {
   try {
