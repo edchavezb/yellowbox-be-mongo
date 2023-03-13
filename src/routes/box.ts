@@ -83,6 +83,90 @@ routes.put("/:boxId/sectionSorting", async (req, res) => {
   }
 });
 
+// Update a box's artists
+routes.put("/:boxId/artists", async (req, res) => {
+  try {
+    const { boxId } = req.params;
+    const { updatedItems } = req.body;
+    const updatedBox: IUserBox | null = await BoxModel.findByIdAndUpdate(
+      boxId,
+      {
+        $set: {
+          artists: updatedItems
+        }
+      },
+      {new: true}
+    ).exec();
+    return res.status(201).json(updatedBox?.artists);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
+// Update a box's albums
+routes.put("/:boxId/albums", async (req, res) => {
+  try {
+    const { boxId } = req.params;
+    const { updatedItems } = req.body;
+    const updatedBox: IUserBox | null = await BoxModel.findByIdAndUpdate(
+      boxId,
+      {
+        $set: {
+          albums: updatedItems
+        }
+      },
+      {new: true}
+    ).exec();
+    return res.status(201).json(updatedBox?.albums);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
+// Update a box's tracks
+routes.put("/:boxId/tracks", async (req, res) => {
+  try {
+    const { boxId } = req.params;
+    const { updatedItems } = req.body;
+    const updatedBox: IUserBox | null = await BoxModel.findByIdAndUpdate(
+      boxId,
+      {
+        $set: {
+          tracks: updatedItems
+        }
+      },
+      {new: true}
+    ).exec();
+    return res.status(201).json(updatedBox?.tracks);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
+// Update a box's playlists
+routes.put("/:boxId/playlists", async (req, res) => {
+  try {
+    const { boxId } = req.params;
+    const { updatedItems } = req.body;
+    const updatedBox: IUserBox | null = await BoxModel.findByIdAndUpdate(
+      boxId,
+      {
+        $set: {
+          playlists: updatedItems
+        }
+      },
+      {new: true}
+    ).exec();
+    return res.status(201).json(updatedBox?.playlists);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
 // Add an artist to a subsection
 routes.put("/:boxId/artists/:itemId/subsection", async (req, res) => {
   try {
