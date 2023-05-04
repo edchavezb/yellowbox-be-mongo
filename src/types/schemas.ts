@@ -157,7 +157,7 @@ export const BoxSchema = new Schema({
         { type: { type: String }, name: String, index: Number, items: { type: [SchemaTypes.Mixed] } }
     ],
     notes: [
-        { itemId: String, noteText: String }
+        { itemId: String, noteText: String, subSectionId: {type: String, required: false}}
     ]
 });
 
