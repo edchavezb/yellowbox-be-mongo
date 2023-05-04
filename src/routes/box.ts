@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { BoxModel, IUserBox } from "../models/box";
 import { SectionSorting } from "../types/interfaces";
+import mongoose from "mongoose";
 
 const routes = Router();
 
@@ -188,7 +189,11 @@ routes.put("/:boxId/artists/:itemId/subsection", async (req, res) => {
       boxId,
       {
         $push: {
-          "subSections.$[elem].items": itemData
+          "subSections.$[elem].items": 
+          {
+            ...itemData,
+            _id: new mongoose.Types.ObjectId()
+          }
         }
       },
       {
@@ -207,7 +212,7 @@ routes.put("/:boxId/artists/:itemId/subsection", async (req, res) => {
 routes.put("/:boxId/artists/:itemId/subsection/remove", async (req, res) => {
   try {
     const { boxId, itemId } = req.params;
-    const { subsectionId } = req.body;
+    const { subsectionId, spotifyId } = req.body;
     await BoxModel.findByIdAndUpdate(
       boxId,
       {
@@ -224,7 +229,7 @@ routes.put("/:boxId/artists/:itemId/subsection/remove", async (req, res) => {
       boxId,
       {
         $pull: {
-          "subSections.$[elem].items": { _id: itemId }
+          "subSections.$[elem].items": { id: spotifyId }
         }
       },
       {
@@ -280,7 +285,11 @@ routes.put("/:boxId/albums/:itemId/subsection", async (req, res) => {
       boxId,
       {
         $push: {
-          "subSections.$[elem].items": itemData
+          "subSections.$[elem].items": 
+          {
+            ...itemData,
+            _id: new mongoose.Types.ObjectId()
+          }
         }
       },
       {
@@ -372,7 +381,11 @@ routes.put("/:boxId/tracks/:itemId/subsection", async (req, res) => {
       boxId,
       {
         $push: {
-          "subSections.$[elem].items": itemData
+          "subSections.$[elem].items": 
+          {
+            ...itemData,
+            _id: new mongoose.Types.ObjectId()
+          }
         }
       },
       {
@@ -464,7 +477,11 @@ routes.put("/:boxId/playlists/:itemId/subsection", async (req, res) => {
       boxId,
       {
         $push: {
-          "subSections.$[elem].items": itemData
+          "subSections.$[elem].items": 
+          {
+            ...itemData,
+            _id: new mongoose.Types.ObjectId()
+          }
         }
       },
       {
@@ -558,9 +575,9 @@ routes.post("/:boxId/notes", async (req, res) => {
 });
 
 // Edit a note in a box
-routes.put("/:boxId/notes/:itemId", async (req, res) => {
+routes.put("/:boxId/notes/:noteId", async (req, res) => {
   try {
-    const { boxId, itemId } = req.params;
+    const { boxId, noteId } = req.params;
     const { noteText } = req.body;
     const updatedBox: IUserBox | null = await BoxModel.findByIdAndUpdate(
       boxId,
@@ -570,7 +587,7 @@ routes.put("/:boxId/notes/:itemId", async (req, res) => {
         }
       },
       {
-        arrayFilters: [ { "elem.itemId": itemId } ],
+        arrayFilters: [ { "elem._id": noteId } ],
         new: true
       }
     ).exec();
