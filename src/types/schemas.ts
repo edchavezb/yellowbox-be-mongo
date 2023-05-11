@@ -157,8 +157,28 @@ export const BoxSchema = new Schema({
         { type: { type: String }, name: String, index: Number, items: { type: [SchemaTypes.Mixed] } }
     ],
     notes: [
-        { itemId: String, noteText: String, subSectionId: {type: String, required: false}}
+        { itemId: String, noteText: String, subSectionId: { type: String, required: false } }
     ]
+});
+
+export const FolderBoxSchema = new Schema({
+    boxId: Schema.Types.ObjectId,
+    boxName: String
+});
+
+export const FolderSchema = new Schema({
+    name: {
+        type: String,
+        unique: false,
+    },
+    public: Boolean,
+    isDeletedByUser: Boolean,
+    creator: {
+        type: Schema.Types.ObjectId,
+        ref: "User"
+    },
+    description: String,
+    boxes: [FolderBoxSchema]
 });
 
 export const UserSchema = new Schema({
@@ -171,5 +191,7 @@ export const UserSchema = new Schema({
         unique: true,
     },
     image: String,
-    services: {}
+    services: {},
+    dashboardFolders: [Schema.Types.ObjectId],
+    dashboardBoxes: [Schema.Types.ObjectId]
 });
