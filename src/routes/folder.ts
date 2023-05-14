@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { FolderModel, IUserFolder } from "../models/folder";
 import { UserModel } from "../models/user";
+import { extractArrayQueryParam } from "../helpers";
+import mongoose from "mongoose";
 
 const routes = Router();
 
@@ -9,10 +11,26 @@ routes.get("/", async (req, res) => {
   try {
     const { folderId } = req.query;
     const folder: IUserFolder | null = await FolderModel.findOne(
-      { $or: [{ _id: folderId as string, isDeletedByUser: false }, { _id: folderId as string, isDeletedByUser: { $exists: false } }] },
-      { isDeletedByUser: 0 }
+      { _id: folderId as string }
     ).exec();
     return res.status(201).json(folder);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
+// Get a group of folders that match an array of ids 
+routes.get("/multiple", async (req, res) => {
+  try {
+    const folderIds = extractArrayQueryParam(req, 'id');
+    const unsortedFolders = await FolderModel.find(
+      { _id: { $in: folderIds.map(mongoose.Types.ObjectId) } }
+    ).exec();
+    let sortingLookup: {[key: string]: IUserFolder} = {}
+    unsortedFolders.forEach(x => sortingLookup[x._id] = x)
+    const sortedFolders = folderIds.map(key => sortingLookup[key])
+    return res.status(201).json(sortedFolders);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Sorry, something went wrong :/" });
@@ -24,7 +42,7 @@ routes.post("/", async (req, res) => {
   try {
     const userFolder: Omit<IUserFolder, "_id"> = req.body;
     const newFolder = await FolderModel.create(userFolder);
-    const updatedDashboardFolders = await UserModel.findByIdAndUpdate(
+    const updatedUser = await UserModel.findByIdAndUpdate(
       newFolder.creator,
       {
         $push: {
@@ -33,7 +51,7 @@ routes.post("/", async (req, res) => {
       },
       { new: true }
     ).exec();
-    return res.status(201).json({ newFolder, updatedDashboardFolders });
+    return res.status(201).json({ newFolder, updatedDashboardFolders: updatedUser?.dashboardFolders });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Sorry, something went wrong :/" });
@@ -49,24 +67,24 @@ routes.delete("/:folderId", async (req, res) => {
       folderId
     ).exec();
     const boxIds = folder?.boxes.map(folderBox => folderBox.boxId)
-    const updatedDashboardFolders = await UserModel.findByIdAndUpdate(
+    await UserModel.findByIdAndUpdate(
       folder!.creator,
       {
         $pull: {
           dashboardFolders: folder!._id
         }
-      },
-      { new: true }
+      }
     ).exec();
-    const updatedDashboardBoxes = await UserModel.findByIdAndUpdate(
+    const updatedUser = await UserModel.findByIdAndUpdate(
       folder!.creator,
       {
         $push: {
           dashboardBoxes: { $each: boxIds }
         }
-      }
+      },
+      { new: true }
     ).exec();
-    return res.status(201).json({ updatedDashboardFolders, updatedDashboardBoxes });
+    return res.status(201).json({ updatedDashboardFolders: updatedUser!.dashboardFolders, updatedDashboardBoxes: updatedUser!.dashboardBoxes });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Sorry, something went wrong :/" });
@@ -84,17 +102,19 @@ routes.post("/:folderId/boxes", async (req, res) => {
         $push: {
           boxes: { boxId, boxName }
         }
-      }
+      },
+      { new: true }
     ).exec();
-    const updatedDashboardBoxes = await UserModel.findByIdAndUpdate(
+    const updatedUser = await UserModel.findByIdAndUpdate(
       updatedFolder!.creator,
       {
         $pull: {
           dashboardBoxes: boxId
         }
-      }
+      },
+      { new: true }
     ).exec();
-    return res.status(201).json({ updatedFolder, updatedDashboardBoxes });
+    return res.status(201).json({ updatedFolder, updatedDashboardBoxes: updatedUser!.dashboardBoxes });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Sorry, something went wrong :/" });
@@ -109,21 +129,25 @@ routes.delete("/:folderId/boxes/:boxId", async (req, res) => {
       folderId,
       {
         $pull: {
-          boxes: { _id: boxId }
+          boxes: { boxId: boxId }
         }
-      }
+      },
+      { new: true }
     ).exec();
-    const updatedDashboardBoxes = await UserModel.findByIdAndUpdate(
+    const updatedUser = await UserModel.findByIdAndUpdate(
       updatedFolder!.creator,
       {
         $push: {
           dashboardBoxes: boxId
         }
-      }
+      },
+      { new: true }
     ).exec();
-    return res.status(201).json({ updatedFolder, updatedDashboardBoxes });
+    return res.status(201).json({ updatedFolder, updatedDashboardBoxes: updatedUser!.dashboardBoxes });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Sorry, something went wrong :/" });
   }
 });
+
+export default routes;

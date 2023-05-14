@@ -3,7 +3,6 @@ import { Album, Artist, Playlist, Sorting, Track, Visibility } from "../types/in
 import { BoxSchema } from "../types/schemas";
 
 interface IUserBox extends Document {
-  _id: string
   name: string
   public: boolean
   creator: string

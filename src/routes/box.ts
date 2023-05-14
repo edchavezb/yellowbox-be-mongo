@@ -2,6 +2,9 @@ import { Router } from "express";
 import { BoxModel, IUserBox } from "../models/box";
 import { SectionSorting } from "../types/interfaces";
 import mongoose from "mongoose";
+import { extractArrayQueryParam } from "../helpers";
+import { UserModel } from "../models/user";
+import { FolderModel } from "../models/folder";
 
 const routes = Router();
 
@@ -10,8 +13,8 @@ routes.get("/", async (req, res) => {
   try {
     const { boxId } = req.query;
     const box: IUserBox | null = await BoxModel.findOne(
-      {$or: [{_id: boxId as string, isDeletedByUser: false}, {_id: boxId as string, isDeletedByUser: { $exists : false }}]},
-      {isDeletedByUser: 0}
+      { $or: [{ _id: boxId as string, isDeletedByUser: false }, { _id: boxId as string, isDeletedByUser: { $exists: false } }] },
+      { isDeletedByUser: 0 }
     ).exec();
     return res.status(201).json(box);
   } catch (error) {
@@ -20,12 +23,40 @@ routes.get("/", async (req, res) => {
   }
 });
 
+// Get a group of boxes that match an array of ids 
+routes.get("/multiple", async (req, res) => {
+  try {
+    const boxIds = extractArrayQueryParam(req, 'id');
+    const unsortedBoxes = await BoxModel.find(
+      { _id: { $in: boxIds.map(mongoose.Types.ObjectId) } }
+    ).exec();
+    let sortingLookup: {[key: string]: IUserBox} = {}
+    unsortedBoxes.forEach(x => sortingLookup[x._id] = x)
+    const sortedBoxes = boxIds.map(key => sortingLookup[key])
+    const dashboardBoxes = sortedBoxes.map(box => ({boxId: box._id, boxName: box.name}))
+    return res.status(201).json(dashboardBoxes);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
+
 // Create a box
 routes.post("/", async (req, res) => {
   try {
     const userBox: Omit<IUserBox, "_id"> = req.body;
     const newBox = await BoxModel.create(userBox);
-    return res.status(201).json(newBox);
+    await UserModel.findByIdAndUpdate(
+      newBox!.creator,
+      {
+        $push: {
+          dashboardBoxes: newBox._id
+        }
+      },
+      { new: true }
+    ).exec();
+    return res.status(201).json({boxId: newBox._id, boxName: newBox.name});
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Sorry, something went wrong :/" });
@@ -39,9 +70,9 @@ routes.put("/:boxId", async (req, res) => {
     const replacementBox: IUserBox = req.body;
 
     const updatedBox: IUserBox | null = await BoxModel.findOneAndReplace(
-      {_id: boxId as string},
+      { _id: boxId as string },
       replacementBox,
-      {new: true}
+      { new: true }
     ).exec();
     return res.status(201).json(updatedBox);
   } catch (error) {
@@ -51,15 +82,35 @@ routes.put("/:boxId", async (req, res) => {
 });
 
 // Delete a box
-routes.delete("/:boxId", async (req, res) => {
+routes.put("/:boxId/delete", async (req, res) => {
   try {
     const { boxId } = req.params;
+    const { containingFolder, folderId } = req.body;
     const updatedBox = await BoxModel.findOneAndUpdate(
-      {_id: boxId as string},
-      {isDeletedByUser: true},
-      {new: true}
+      { _id: boxId as string },
+      { isDeletedByUser: true },
+      { new: true }
     ).exec();
-    return res.status(201).json(updatedBox);
+    if (containingFolder) {
+      const updatedFolder = await FolderModel.findByIdAndUpdate(
+        folderId,
+        { $pull: { boxes: { boxId: boxId } } },
+        { new: true }
+      ).exec();
+      return res.status(201).json(updatedFolder);
+    }
+    else {
+      const updatedUser = await UserModel.findByIdAndUpdate(
+        updatedBox!.creator,
+        {
+          $pull: {
+            dashboardBoxes: boxId
+          }
+        },
+        { new: true }
+      ).exec();
+      return res.status(201).json(updatedUser);
+    }
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Sorry, something went wrong :/" });
@@ -73,11 +124,27 @@ routes.put("/:boxId/sectionSorting", async (req, res) => {
     const updatedSorting: SectionSorting = req.body;
 
     const updatedBox: IUserBox | null = await BoxModel.findOneAndUpdate(
-      {_id: boxId as string},
-      {sectionSorting: updatedSorting},
-      {new: true}
+      { _id: boxId as string },
+      { sectionSorting: updatedSorting },
+      { new: true }
     ).exec();
     return res.status(201).json(updatedBox?.sectionSorting);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
+// Add an artist to a box
+routes.post("/:boxId/artists", async (req, res) => {
+  try {
+    const { boxId } = req.params;
+    const { newArtist } = req.body;
+    const updatedBox: IUserBox | null = await BoxModel.findOneAndUpdate(
+      { _id: boxId, "artists.id": { $ne: newArtist.id } },
+      { $push: { artists: newArtist } }
+    ).exec();
+    return res.status(201).json(updatedBox?.artists);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Sorry, something went wrong :/" });
@@ -96,9 +163,25 @@ routes.put("/:boxId/artists", async (req, res) => {
           artists: updatedItems
         }
       },
-      {new: true}
+      { new: true }
     ).exec();
     return res.status(201).json(updatedBox?.artists);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
+// Add an album to a box
+routes.post("/:boxId/albums", async (req, res) => {
+  try {
+    const { boxId } = req.params;
+    const { newAlbum } = req.body;
+    const updatedBox: IUserBox | null = await BoxModel.findOneAndUpdate(
+      { _id: boxId, "albums.id": { $ne: newAlbum.id } },
+      { $push: { albums: newAlbum } }
+    ).exec();
+    return res.status(201).json(updatedBox?.albums);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Sorry, something went wrong :/" });
@@ -117,9 +200,25 @@ routes.put("/:boxId/albums", async (req, res) => {
           albums: updatedItems
         }
       },
-      {new: true}
+      { new: true }
     ).exec();
     return res.status(201).json(updatedBox?.albums);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
+// Add a track to a box
+routes.post("/:boxId/tracks", async (req, res) => {
+  try {
+    const { boxId } = req.params;
+    const { newTrack } = req.body;
+    const updatedBox: IUserBox | null = await BoxModel.findOneAndUpdate(
+      { _id: boxId, "tracks.id": { $ne: newTrack.id } },
+      { $push: { tracks: newTrack } }
+    ).exec();
+    return res.status(201).json(updatedBox?.tracks);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Sorry, something went wrong :/" });
@@ -138,9 +237,25 @@ routes.put("/:boxId/tracks", async (req, res) => {
           tracks: updatedItems
         }
       },
-      {new: true}
+      { new: true }
     ).exec();
     return res.status(201).json(updatedBox?.tracks);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
+// Add a playlist to a box
+routes.post("/:boxId/playlists", async (req, res) => {
+  try {
+    const { boxId } = req.params;
+    const { newPlaylist } = req.body;
+    const updatedBox: IUserBox | null = await BoxModel.findOneAndUpdate(
+      { _id: boxId, "playlists.id": { $ne: newPlaylist.id } },
+      { $push: { playlists: newPlaylist } }
+    ).exec();
+    return res.status(201).json(updatedBox?.playlists);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Sorry, something went wrong :/" });
@@ -159,7 +274,7 @@ routes.put("/:boxId/playlists", async (req, res) => {
           playlists: updatedItems
         }
       },
-      {new: true}
+      { new: true }
     ).exec();
     return res.status(201).json(updatedBox?.playlists);
   } catch (error) {
@@ -181,7 +296,7 @@ routes.put("/:boxId/artists/:itemId/subsection", async (req, res) => {
         }
       },
       {
-        arrayFilters: [ { "elem._id": itemId } ],
+        arrayFilters: [{ "elem._id": itemId }],
         new: true
       }
     ).exec();
@@ -189,7 +304,7 @@ routes.put("/:boxId/artists/:itemId/subsection", async (req, res) => {
       boxId,
       {
         $push: {
-          "subSections.$[elem].items": 
+          "subSections.$[elem].items":
           {
             ...itemData,
             _id: new mongoose.Types.ObjectId()
@@ -197,7 +312,7 @@ routes.put("/:boxId/artists/:itemId/subsection", async (req, res) => {
         }
       },
       {
-        arrayFilters: [ { "elem._id": subsectionId } ],
+        arrayFilters: [{ "elem._id": subsectionId }],
         new: true
       }
     ).exec();
@@ -221,7 +336,7 @@ routes.put("/:boxId/artists/:itemId/subsection/remove", async (req, res) => {
         }
       },
       {
-        arrayFilters: [ { "elem._id": itemId } ],
+        arrayFilters: [{ "elem._id": itemId }],
         new: true
       }
     ).exec();
@@ -233,7 +348,7 @@ routes.put("/:boxId/artists/:itemId/subsection/remove", async (req, res) => {
         }
       },
       {
-        arrayFilters: [ { "elem._id": subsectionId } ],
+        arrayFilters: [{ "elem._id": subsectionId }],
         new: true
       }
     ).exec();
@@ -255,7 +370,7 @@ routes.delete("/:boxId/artists/:itemId", async (req, res) => {
           artists: { _id: itemId }
         }
       },
-      {new: true}
+      { new: true }
     ).exec();
     return res.status(201).json(updatedBox?.artists);
   } catch (error) {
@@ -277,7 +392,7 @@ routes.put("/:boxId/albums/:itemId/subsection", async (req, res) => {
         }
       },
       {
-        arrayFilters: [ { "elem._id": itemId } ],
+        arrayFilters: [{ "elem._id": itemId }],
         new: true
       }
     ).exec();
@@ -285,7 +400,7 @@ routes.put("/:boxId/albums/:itemId/subsection", async (req, res) => {
       boxId,
       {
         $push: {
-          "subSections.$[elem].items": 
+          "subSections.$[elem].items":
           {
             ...itemData,
             _id: new mongoose.Types.ObjectId()
@@ -293,7 +408,7 @@ routes.put("/:boxId/albums/:itemId/subsection", async (req, res) => {
         }
       },
       {
-        arrayFilters: [ { "elem._id": subsectionId } ],
+        arrayFilters: [{ "elem._id": subsectionId }],
         new: true
       }
     ).exec();
@@ -317,7 +432,7 @@ routes.put("/:boxId/albums/:itemId/subsection/remove", async (req, res) => {
         }
       },
       {
-        arrayFilters: [ { "elem._id": itemId } ],
+        arrayFilters: [{ "elem._id": itemId }],
         new: true
       }
     ).exec();
@@ -329,7 +444,7 @@ routes.put("/:boxId/albums/:itemId/subsection/remove", async (req, res) => {
         }
       },
       {
-        arrayFilters: [ { "elem._id": subsectionId } ],
+        arrayFilters: [{ "elem._id": subsectionId }],
         new: true
       }
     ).exec();
@@ -351,7 +466,7 @@ routes.delete("/:boxId/albums/:itemId", async (req, res) => {
           albums: { _id: itemId }
         }
       },
-      {new: true}
+      { new: true }
     ).exec();
     return res.status(201).json(updatedBox?.albums);
   } catch (error) {
@@ -373,7 +488,7 @@ routes.put("/:boxId/tracks/:itemId/subsection", async (req, res) => {
         }
       },
       {
-        arrayFilters: [ { "elem._id": itemId } ],
+        arrayFilters: [{ "elem._id": itemId }],
         new: true
       }
     ).exec();
@@ -381,7 +496,7 @@ routes.put("/:boxId/tracks/:itemId/subsection", async (req, res) => {
       boxId,
       {
         $push: {
-          "subSections.$[elem].items": 
+          "subSections.$[elem].items":
           {
             ...itemData,
             _id: new mongoose.Types.ObjectId()
@@ -389,7 +504,7 @@ routes.put("/:boxId/tracks/:itemId/subsection", async (req, res) => {
         }
       },
       {
-        arrayFilters: [ { "elem._id": subsectionId } ],
+        arrayFilters: [{ "elem._id": subsectionId }],
         new: true
       }
     ).exec();
@@ -413,7 +528,7 @@ routes.put("/:boxId/tracks/:itemId/subsection/remove", async (req, res) => {
         }
       },
       {
-        arrayFilters: [ { "elem._id": itemId } ],
+        arrayFilters: [{ "elem._id": itemId }],
         new: true
       }
     ).exec();
@@ -425,7 +540,7 @@ routes.put("/:boxId/tracks/:itemId/subsection/remove", async (req, res) => {
         }
       },
       {
-        arrayFilters: [ { "elem._id": subsectionId } ],
+        arrayFilters: [{ "elem._id": subsectionId }],
         new: true
       }
     ).exec();
@@ -447,7 +562,7 @@ routes.delete("/:boxId/tracks/:itemId", async (req, res) => {
           tracks: { _id: itemId }
         }
       },
-      {new: true}
+      { new: true }
     ).exec();
     return res.status(201).json(updatedBox?.tracks);
   } catch (error) {
@@ -469,7 +584,7 @@ routes.put("/:boxId/playlists/:itemId/subsection", async (req, res) => {
         }
       },
       {
-        arrayFilters: [ { "elem._id": itemId } ],
+        arrayFilters: [{ "elem._id": itemId }],
         new: true
       }
     ).exec();
@@ -477,7 +592,7 @@ routes.put("/:boxId/playlists/:itemId/subsection", async (req, res) => {
       boxId,
       {
         $push: {
-          "subSections.$[elem].items": 
+          "subSections.$[elem].items":
           {
             ...itemData,
             _id: new mongoose.Types.ObjectId()
@@ -485,7 +600,7 @@ routes.put("/:boxId/playlists/:itemId/subsection", async (req, res) => {
         }
       },
       {
-        arrayFilters: [ { "elem._id": subsectionId } ],
+        arrayFilters: [{ "elem._id": subsectionId }],
         new: true
       }
     ).exec();
@@ -509,7 +624,7 @@ routes.put("/:boxId/playlists/:itemId/subsection/remove", async (req, res) => {
         }
       },
       {
-        arrayFilters: [ { "elem._id": itemId } ],
+        arrayFilters: [{ "elem._id": itemId }],
         new: true
       }
     ).exec();
@@ -521,7 +636,7 @@ routes.put("/:boxId/playlists/:itemId/subsection/remove", async (req, res) => {
         }
       },
       {
-        arrayFilters: [ { "elem._id": subsectionId } ],
+        arrayFilters: [{ "elem._id": subsectionId }],
         new: true
       }
     ).exec();
@@ -543,7 +658,7 @@ routes.delete("/:boxId/playlists/:itemId", async (req, res) => {
           playlists: { _id: itemId }
         }
       },
-      {new: true}
+      { new: true }
     ).exec();
     return res.status(201).json(updatedBox?.playlists);
   } catch (error) {
@@ -560,7 +675,7 @@ routes.post("/:boxId/notes", async (req, res) => {
       boxId,
       {
         $push: {
-          notes: req.body 
+          notes: req.body
         }
       },
       {
@@ -583,11 +698,11 @@ routes.put("/:boxId/notes/:noteId", async (req, res) => {
       boxId,
       {
         $set: {
-          "notes.$[elem].noteText" : noteText 
+          "notes.$[elem].noteText": noteText
         }
       },
       {
-        arrayFilters: [ { "elem._id": noteId } ],
+        arrayFilters: [{ "elem._id": noteId }],
         new: true
       }
     ).exec();
@@ -606,7 +721,7 @@ routes.post("/:boxId/subsections", async (req, res) => {
       boxId,
       {
         $push: {
-          subSections: req.body 
+          subSections: req.body
         }
       },
       {
@@ -628,7 +743,7 @@ routes.put("/:boxId/subsections", async (req, res) => {
       boxId,
       {
         $set: {
-          subSections: req.body 
+          subSections: req.body
         }
       },
       {
@@ -646,16 +761,16 @@ routes.put("/:boxId/subsections", async (req, res) => {
 routes.put("/:boxId/subsections/:subsectionId", async (req, res) => {
   try {
     const { boxId, subsectionId } = req.params;
-    const { name } = req.body 
+    const { name } = req.body
     const updatedBox: IUserBox | null = await BoxModel.findByIdAndUpdate(
       boxId,
       {
         $set: {
-          "subSections.$[elem].name" : name
+          "subSections.$[elem].name": name
         }
       },
       {
-        arrayFilters: [ { "elem._id": subsectionId } ],
+        arrayFilters: [{ "elem._id": subsectionId }],
         new: true
       }
     ).exec();
@@ -678,7 +793,7 @@ routes.delete("/:boxId/subsections/:subsectionId", async (req, res) => {
           subSections: { _id: subsectionId }
         }
       },
-      {new: true}
+      { new: true }
     ).exec();
     const updatedBox: IUserBox | null = await BoxModel.findByIdAndUpdate(
       boxId,
@@ -688,7 +803,7 @@ routes.delete("/:boxId/subsections/:subsectionId", async (req, res) => {
         }
       },
       {
-        arrayFilters: [ { "elem.subSection": subsectionId } ],
+        arrayFilters: [{ "elem.subSection": subsectionId }],
         new: true
       }
     ).exec();

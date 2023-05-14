@@ -4,7 +4,6 @@ import { FolderSchema } from "../types/schemas";
 interface IUserFolder extends Document {
     name: boolean,
     public: boolean,
-    isDeletedByUser?: boolean,
     creator: string
     description: string,
     boxes: {

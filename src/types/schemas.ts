@@ -172,7 +172,6 @@ export const FolderSchema = new Schema({
         unique: false,
     },
     public: Boolean,
-    isDeletedByUser: Boolean,
     creator: {
         type: Schema.Types.ObjectId,
         ref: "User"
