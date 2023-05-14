@@ -7,7 +7,9 @@ interface IUser extends Document {
     email: string
     services: {
         [key: string]: string
-    }
+    },
+    dashboardFolders: string[],
+    dashboardBoxes: string[]
 }
 
 const UserModel = model<IUser>("User", UserSchema);

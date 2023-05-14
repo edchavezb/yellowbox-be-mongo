@@ -2,6 +2,7 @@ import "./lib/db";
 import express from "express";
 import cors from "cors";
 import boxRoutes from "./routes/box";
+import folderRoutes from "./routes/folder";
 import userRoutes from "./routes/user"
 
 const app = express();
@@ -17,6 +18,7 @@ app.get("/api", async (req, res) => {
 });
 
 app.use("/api/boxes", boxRoutes);
+app.use("/api/folders", folderRoutes);
 app.use("/api/users", userRoutes);
 
 app.listen(port, () => {
