@@ -150,4 +150,34 @@ routes.delete("/:folderId/boxes/:boxId", async (req, res) => {
   }
 });
 
+// Move a box between folders
+routes.put("/:sourceId/boxes/:boxId", async (req, res) => {
+  try {
+    const { sourceId, boxId } = req.params;
+    const { targetId, boxName } = req.body;
+    const updatedSourceFolder = await FolderModel.findByIdAndUpdate(
+      sourceId,
+      {
+        $pull: {
+          boxes: { boxId: boxId }
+        }
+      },
+      { new: true }
+    ).exec();
+    const updatedTargetFolder = await FolderModel.findByIdAndUpdate(
+      targetId,
+      {
+        $push: {
+          boxes: { boxId, boxName }
+        }
+      },
+      { new: true }
+    ).exec();
+    return res.status(201).json({ updatedSourceFolder, updatedTargetFolder });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
 export default routes;
