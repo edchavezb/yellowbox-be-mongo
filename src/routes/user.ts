@@ -83,10 +83,10 @@ routes.put("/:userId/dashboardFolders", async (req, res) => {
 routes.put("/:userId/dashboardBoxes", async (req, res) => {
   try {
     const { userId } = req.params;
-    const { updatedBoxList } = req.body;
+    const { updatedBoxIdList } = req.body;
     const updatedUser: IUser | null = await UserModel.findByIdAndUpdate(
       userId,
-      { dashboardBoxes: updatedBoxList },
+      { dashboardBoxes: updatedBoxIdList },
       { 
         upsert: true,
         new: true 
