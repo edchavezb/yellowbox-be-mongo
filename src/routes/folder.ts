@@ -121,6 +121,29 @@ routes.post("/:folderId/boxes", async (req, res) => {
   }
 });
 
+// Update a folder's boxes
+routes.put("/:folderId/boxes", async (req, res) => {
+  try {
+    const { folderId } = req.params;
+    const { updatedItems } = req.body;
+    const updatedFolder = await FolderModel.findByIdAndUpdate(
+      folderId,
+      {
+        $set: {
+          boxes: updatedItems
+        }
+      },
+      { new: true }
+    ).exec();
+    return res.status(201).json({ updatedFolder });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
+
+
 // Remove a box from a folder
 routes.delete("/:folderId/boxes/:boxId", async (req, res) => {
   try {
