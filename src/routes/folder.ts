@@ -58,6 +58,24 @@ routes.post("/", async (req, res) => {
   }
 });
 
+// Update a folder
+routes.put("/:folderId", async (req, res) => {
+  try {
+    const { folderId } = req.params;
+    const updatedFolder: IUserFolder = req.body;
+
+    const result: IUserFolder | null = await FolderModel.findOneAndReplace(
+      { _id: folderId as string },
+      updatedFolder,
+      { new: true }
+    ).exec();
+    return res.status(201).json({updatedFolder: result});
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
 // Delete a folder
 routes.delete("/:folderId", async (req, res) => {
   try {
@@ -141,8 +159,6 @@ routes.put("/:folderId/boxes", async (req, res) => {
     return res.status(500).json({ error: "Sorry, something went wrong :/" });
   }
 });
-
-
 
 // Remove a box from a folder
 routes.delete("/:folderId/boxes/:boxId", async (req, res) => {
