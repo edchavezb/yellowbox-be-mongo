@@ -37,18 +37,18 @@ routes.get('/login', function (req, res) {
   res.cookie(stateKey, state);
   res.status(200).json({
     url: 'https://accounts.spotify.com/authorize?' +
-    querystring.stringify({
-      response_type: 'code',
-      client_id: credentials.id,
-      scope: scopes.join(" "),
-      redirect_uri: `${process.env.PROJECT_ROOT}/authsuccess`,
-      state: state
-    })
+      querystring.stringify({
+        response_type: 'code',
+        client_id: credentials.id,
+        scope: scopes.join(" "),
+        redirect_uri: `${process.env.PROJECT_ROOT}/authsuccess`,
+        state: state
+      })
   });
 });
 
-// Get a Spotify access token
-routes.get("/token", async (req, res) => {
+// Get a Spotify access token for a logged-in User
+routes.get("/userToken", async (req, res) => {
   const code = req.query.code || null;
   const state = req.query.state || null;
   const storedState = req.cookies ? req.cookies[stateKey] : null;
@@ -73,12 +73,34 @@ routes.get("/token", async (req, res) => {
           Authorization: `Basic ${Buffer.from(credentials.id + ':' + credentials.secret).toString('base64')}`
         }
       })
-      const {access_token, refresh_token} = response.data;
-      return res.status(200).json({access_token, refresh_token});
+      const { access_token, refresh_token } = response.data;
+      return res.status(200).json({ access_token, refresh_token });
     }
-  } 
-  catch(err) {
-    return res.status(404).json({error: err});
+  }
+  catch (err) {
+    return res.status(404).json({ error: err });
+  }
+});
+
+// Get a Spotify access token for generic requests that don't require acessing user data
+routes.get("/genericToken", async (req, res) => {
+  try {
+    const response = await axios({
+      method: 'post',
+      url: 'https://accounts.spotify.com/api/token',
+      data: querystring.stringify({
+        grant_type: 'client_credentials'
+      }),
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Authorization: `Basic ${Buffer.from(credentials.id + ':' + credentials.secret).toString('base64')}`
+      }
+    })
+    const { access_token } = response.data;
+    return res.status(200).json({ access_token });
+  }
+  catch (err) {
+    return res.status(404).json({ error: err });
   }
 });
 
@@ -99,11 +121,11 @@ routes.get('/refresh', async (req, res) => {
         Authorization: `Basic ${Buffer.from(credentials.id + ':' + credentials.secret).toString('base64')}`
       }
     })
-    const {access_token} = response.data;
-    return res.status(200).json({access_token});
+    const { access_token } = response.data;
+    return res.status(200).json({ access_token });
   }
-  catch(err) {
-    return res.status(404).json({error: err});
+  catch (err) {
+    return res.status(404).json({ error: err });
   }
 });
 
