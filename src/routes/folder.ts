@@ -13,7 +13,8 @@ routes.get("/", async (req, res) => {
     const folder: IUserFolder | null = await FolderModel.findOne(
       { _id: folderId as string }
     ).exec();
-    return res.status(201).json(folder);
+    const creator = await UserModel.findById(folder?.creator)
+    return res.status(201).json({folderData: folder, creatorName: creator?.displayName});
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Sorry, something went wrong :/" });
