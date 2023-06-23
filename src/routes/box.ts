@@ -16,7 +16,8 @@ routes.get("/", async (req, res) => {
       { $or: [{ _id: boxId as string, isDeletedByUser: false }, { _id: boxId as string, isDeletedByUser: { $exists: false } }] },
       { isDeletedByUser: 0 }
     ).exec();
-    return res.status(201).json(box);
+    const creator = await UserModel.findById(box?.creator)
+    return res.status(201).json({boxData: box, creatorName: creator?.displayName});
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Sorry, something went wrong :/" });
