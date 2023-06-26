@@ -17,7 +17,7 @@ routes.get("/", async (req, res) => {
       { isDeletedByUser: 0 }
     ).exec();
     const creator = await UserModel.findById(box?.creator)
-    return res.status(201).json({boxData: box, creatorName: creator?.displayName});
+    return res.status(201).json({ boxData: box, creatorName: creator?.displayName });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Sorry, something went wrong :/" });
@@ -31,10 +31,10 @@ routes.get("/multiple", async (req, res) => {
     const unsortedBoxes = await BoxModel.find(
       { _id: { $in: boxIds.map(mongoose.Types.ObjectId) } }
     ).exec();
-    let sortingLookup: {[key: string]: IUserBox} = {}
+    let sortingLookup: { [key: string]: IUserBox } = {}
     unsortedBoxes.forEach(x => sortingLookup[x._id] = x)
     const sortedBoxes = boxIds.map(key => sortingLookup[key])
-    const dashboardBoxes = sortedBoxes.map(box => ({boxId: box._id, boxName: box.name}))
+    const dashboardBoxes = sortedBoxes.map(box => ({ boxId: box._id, boxName: box.name }))
     return res.status(201).json(dashboardBoxes);
   } catch (error) {
     console.error(error);
@@ -57,7 +57,7 @@ routes.post("/", async (req, res) => {
       },
       { new: true }
     ).exec();
-    return res.status(201).json({boxId: newBox._id, boxName: newBox.name});
+    return res.status(201).json({ boxId: newBox._id, boxName: newBox.name });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Sorry, something went wrong :/" });
@@ -173,6 +173,23 @@ routes.put("/:boxId/artists", async (req, res) => {
   }
 });
 
+// Update a single artist in a box
+routes.put("/:boxId/artists/:artistId", async (req, res) => {
+  try {
+    const { boxId, artistId } = req.params;
+    const { updatedArtist } = req.body;
+    const updatedUserBox = await BoxModel.findByIdAndUpdate(
+      boxId,
+      { $set: { "artists.$[elem]": updatedArtist } },
+      { arrayFilters: [{ "elem._id": artistId }], new: true }
+    ).exec();
+    return res.status(200).json({ updatedUserBox });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
 // Add an album to a box
 routes.post("/:boxId/albums", async (req, res) => {
   try {
@@ -204,6 +221,23 @@ routes.put("/:boxId/albums", async (req, res) => {
       { new: true }
     ).exec();
     return res.status(201).json(updatedBox?.albums);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
+// Update a single album in a box
+routes.put("/:boxId/albums/:albumId", async (req, res) => {
+  try {
+    const { boxId, albumId } = req.params;
+    const { updatedAlbum } = req.body;
+    const updatedUserBox = await BoxModel.findByIdAndUpdate(
+      boxId,
+      { $set: { "albums.$[elem]": updatedAlbum } },
+      { arrayFilters: [{ "elem._id": albumId }], new: true }
+    ).exec();
+    return res.status(200).json({ updatedUserBox });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Sorry, something went wrong :/" });
@@ -247,6 +281,23 @@ routes.put("/:boxId/tracks", async (req, res) => {
   }
 });
 
+// Update a single track in a box
+routes.put("/:boxId/tracks/:trackId", async (req, res) => {
+  try {
+    const { boxId, trackId } = req.params;
+    const { updatedTrack } = req.body;
+    const updatedUserBox = await BoxModel.findByIdAndUpdate(
+      boxId,
+      { $set: { "tracks.$[elem]": updatedTrack } },
+      { arrayFilters: [{ "elem._id": trackId }], new: true }
+    ).exec();
+    return res.status(200).json({ updatedUserBox });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
 // Add a playlist to a box
 routes.post("/:boxId/playlists", async (req, res) => {
   try {
@@ -278,6 +329,23 @@ routes.put("/:boxId/playlists", async (req, res) => {
       { new: true }
     ).exec();
     return res.status(201).json(updatedBox?.playlists);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
+// Update a single playlist in a box
+routes.put("/:boxId/playlists/:playlistId", async (req, res) => { 
+  try {
+    const { boxId, playlistId } = req.params;
+    const { updatedPlaylist } = req.body;
+    const updatedUserBox = await BoxModel.findByIdAndUpdate(
+      boxId,
+      { $set: { "playlists.$[elem]": updatedPlaylist } },
+      { arrayFilters: [{ "elem._id": playlistId }], new: true }
+    ).exec();
+    return res.status(200).json({ updatedUserBox });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Sorry, something went wrong :/" });
