@@ -181,14 +181,19 @@ export const FolderSchema = new Schema({
 });
 
 export const UserSchema = new Schema({
-    displayName: {
-        type: String,
-        unique: false,
-    },
     email: {
         type: String,
         unique: true,
     },
+    userName: {
+        type: String,
+        unique: false,
+    },
+    displayName: {
+        type: String,
+        unique: false,
+    },
+    firebaseId: String,
     image: String,
     services: {},
     dashboardFolders: [Schema.Types.ObjectId],
