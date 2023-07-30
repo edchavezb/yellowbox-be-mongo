@@ -2,8 +2,14 @@ import { Router } from "express";
 import { BoxModel, IUserBox } from "../models/box";
 import { UserModel, IUser } from "../models/user";
 import { FolderModel, IUserFolder } from "../models/folder";
+import authenticate from "../middleware/autenticate"
 
 const routes = Router();
+
+// Get the authenticated user's data
+routes.get("/me", authenticate, async (req, res) => {
+  res.status(200).json(req.user);
+});
 
 // Get a user's data by Spotify id
 routes.get("/", async (req, res) => {
@@ -23,6 +29,42 @@ routes.post("/", async (req, res) => {
     const user: Omit<IUser, "_id"> = req.body;
     const newUser = await UserModel.create(user);
     return res.status(201).json(newUser);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
+// Update a user
+routes.put("/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const userData: IUser = req.body;
+
+    const updatedUser: IUser | null = await UserModel.findOneAndReplace(
+      { _id: userId as string },
+      userData,
+      { new: true }
+    ).exec();
+    return res.status(201).json(updatedUser);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
+// Link a user to a Spotify account
+routes.post("/:userId/spotify", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { spotifyData } = req.body;
+
+    const updatedUser = await UserModel.findOneAndUpdate(
+      { _id: userId },
+      { $set: { 'services.spotify': spotifyData } },
+      { new: true }
+    ).exec();
+    return res.status(201).json(updatedUser);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Sorry, something went wrong :/" });
