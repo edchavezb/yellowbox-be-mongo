@@ -181,20 +181,40 @@ export const FolderSchema = new Schema({
 });
 
 export const UserSchema = new Schema({
-    email: {
+    firebaseId: {
         type: String,
         unique: true,
     },
-    userName: {
+    username: {
         type: String,
-        unique: false,
+        unique: true,
     },
     displayName: {
         type: String,
         unique: false,
     },
-    firebaseId: String,
     image: String,
+    account: {
+        accountTier: String,
+        signUpDate: String,
+        email: {
+            type: String,
+            unique: true,
+        },
+        emailVerified: Boolean,
+        showTutorial: Boolean
+    },
+    billing: {
+        stripeData: {
+            customerId: String,
+            subscription: {
+                subscriptionId: String,
+                status: String,
+                priceId: String,
+                productId: String
+            }
+        }
+    },
     services: {},
     dashboardFolders: [Schema.Types.ObjectId],
     dashboardBoxes: [Schema.Types.ObjectId]
