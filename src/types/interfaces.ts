@@ -27,6 +27,26 @@ export interface UserAuth {
   refreshToken: string | null
 }
 
+export interface UserBilling {
+  stripeData?: {
+    customerId: string
+    subscription: {
+      subscriptionId: string
+      status: string
+      priceId: string
+      productId: string
+    }
+  }
+}
+
+export interface UserAccountData {
+  accountTier: string
+  showTutorial: boolean
+  signUpDate: string
+  emailVerified: boolean
+  email: string
+}
+
 export interface UserBox {
   id: string
   name: string

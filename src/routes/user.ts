@@ -8,15 +8,27 @@ const routes = Router();
 
 // Get the authenticated user's data
 routes.get("/me", authenticate, async (req, res) => {
-  res.status(200).json(req.user);
+  res.status(200).json({appUser: req.user});
 });
 
 // Get a user's data by Spotify id
-routes.get("/", async (req, res) => {
+// routes.get("/", async (req, res) => {
+//   try {
+//     const { spotifyId } = req.query;
+//     const userData: IUser | null = await UserModel.findOne({ services: {spotify: spotifyId as string} }).exec();
+//     return res.json(userData);
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({ error: "Sorry, something went wrong :/" });
+//   }
+// });
+
+// Check if username exists
+routes.get("/check/:username", async (req, res) => {
   try {
-    const { spotifyId } = req.query;
-    const userData: IUser | null = await UserModel.findOne({ services: {spotify: spotifyId as string} }).exec();
-    return res.json(userData);
+    const { username } = req.params;
+    const usernameCount = await UserModel.countDocuments({username});
+    return res.status(201).json({usernameExists: !!usernameCount});
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Sorry, something went wrong :/" });
@@ -44,6 +56,23 @@ routes.put("/:userId", async (req, res) => {
     const updatedUser: IUser | null = await UserModel.findOneAndReplace(
       { _id: userId as string },
       userData,
+      { new: true }
+    ).exec();
+    return res.status(201).json(updatedUser);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
+// Set a user's email address as verified
+routes.put("/:userId/verifyEmail", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const updatedUser = await UserModel.findOneAndUpdate(
+      { _id: userId },
+      { $set: { 'account.emailVerified': true } },
       { new: true }
     ).exec();
     return res.status(201).json(updatedUser);

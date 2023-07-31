@@ -20,12 +20,7 @@ export default async function (req: Request, res: Response, next: NextFunction) 
       firebaseId: firebaseUser.user_id
     });
 
-    if (!user) {
-      // Unauthorized
-      return res.sendStatus(401);
-    }
-
-    req.user = user;
+    req.user = user || undefined;
 
     next();
   } catch (err) {
