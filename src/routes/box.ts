@@ -173,6 +173,32 @@ routes.put("/:boxId/artists", async (req, res) => {
   }
 });
 
+// Reorder an artist in a box
+routes.put("/:boxId/artists/reorder", async (req, res) => {
+  try {
+    const { boxId } = req.params;
+    const { sourceIndex, destinationIndex } = req.body;
+    const box = await BoxModel.findById(boxId);
+    if (!box) {
+      return res.status(404).json({ message: 'Box not found.' });
+    }
+
+    const artists = box.artists;
+    const [targetItem] = artists.splice(sourceIndex, 1);
+    artists.splice(destinationIndex, 0, targetItem);
+    const updatedBox: IUserBox | null = await BoxModel.findOneAndUpdate(
+      { _id: boxId },
+      { $set: { artists } },
+      { new: true }
+    ).exec();
+
+    return res.status(200).json({ updatedBox });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
 // Update a single artist in a box
 routes.put("/:boxId/artists/:artistId", async (req, res) => {
   try {
@@ -221,6 +247,32 @@ routes.put("/:boxId/albums", async (req, res) => {
       { new: true }
     ).exec();
     return res.status(201).json(updatedBox?.albums);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
+// Reorder an album in a box
+routes.put("/:boxId/albums/reorder", async (req, res) => {
+  try {
+    const { boxId } = req.params;
+    const { sourceIndex, destinationIndex } = req.body;
+    const box = await BoxModel.findById(boxId);
+    if (!box) {
+      return res.status(404).json({ message: 'Box not found.' });
+    }
+
+    const albums = box.albums;
+    const [targetItem] = albums.splice(sourceIndex, 1);
+    albums.splice(destinationIndex, 0, targetItem);
+    const updatedBox = await BoxModel.findOneAndUpdate(
+      { _id: boxId },
+      { $set: { albums } },
+      { new: true }
+    ).exec();
+
+    return res.status(200).json({ updatedBox });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Sorry, something went wrong :/" });
@@ -281,6 +333,32 @@ routes.put("/:boxId/tracks", async (req, res) => {
   }
 });
 
+// Reorder a track in a box
+routes.put("/:boxId/tracks/reorder", async (req, res) => {
+  try {
+    const { boxId } = req.params;
+    const { sourceIndex, destinationIndex } = req.body;
+    const box = await BoxModel.findById(boxId);
+    if (!box) {
+      return res.status(404).json({ message: 'Box not found.' });
+    }
+
+    const tracks = box.tracks;
+    const [targetItem] = tracks.splice(sourceIndex, 1);
+    tracks.splice(destinationIndex, 0, targetItem);
+    const updatedBox = await BoxModel.findOneAndUpdate(
+      { _id: boxId },
+      { $set: { tracks } },
+      { new: true }
+    ).exec();
+
+    return res.status(200).json({ updatedBox });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
 // Update a single track in a box
 routes.put("/:boxId/tracks/:trackId", async (req, res) => {
   try {
@@ -329,6 +407,32 @@ routes.put("/:boxId/playlists", async (req, res) => {
       { new: true }
     ).exec();
     return res.status(201).json(updatedBox?.playlists);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
+// Reorder a playlist in a box
+routes.put("/:boxId/playlists/reorder", async (req, res) => {
+  try {
+    const { boxId } = req.params;
+    const { sourceIndex, destinationIndex } = req.body;
+    const box = await BoxModel.findById(boxId);
+    if (!box) {
+      return res.status(404).json({ message: 'Box not found.' });
+    }
+
+    const playlists = box.playlists;
+    const [targetItem] = playlists.splice(sourceIndex, 1);
+    playlists.splice(destinationIndex, 0, targetItem);
+    const updatedBox = await BoxModel.findOneAndUpdate(
+      { _id: boxId },
+      { $set: { playlists } },
+      { new: true }
+    ).exec();
+
+    return res.status(200).json({ updatedBox });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Sorry, something went wrong :/" });
