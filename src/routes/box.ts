@@ -954,6 +954,39 @@ routes.put("/:boxId/subsections/:subsectionId", async (req, res) => {
   }
 });
 
+// Reorder items in a subsection
+routes.put('/:boxId/subsections/:subsectionId/reorder', async (req, res) => {
+  try {
+    const { boxId, subsectionId } = req.params;
+    const { sourceIndex, destinationIndex } = req.body;
+
+    // Find the box by its ID
+    const box = await BoxModel.findById(boxId);
+
+    if (!box) {
+      return res.status(404).json({ message: 'Box not found.' });
+    }
+
+    const subsection = box.subSections.find(sub => sub._id.toString() === subsectionId);
+    if (!subsection) {
+      throw new Error('Subsection not found.');
+    }
+
+    const [targetItem] = subsection.items.splice(sourceIndex, 1);
+    subsection.items.splice(destinationIndex, 0, targetItem);
+    const updatedBox = await BoxModel.findOneAndUpdate(
+      { _id: boxId },
+      { $set: { subSections: box.subSections } },
+      { new: true }
+    ).exec();
+
+    res.status(200).json({ message: 'Items in the subsection reordered successfully.', updatedSubsections: updatedBox?.subSections });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Something went wrong.' });
+  }
+});
+
 // Delete a subsection
 routes.delete("/:boxId/subsections/:subsectionId", async (req, res) => {
   try {
