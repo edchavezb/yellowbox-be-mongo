@@ -18,7 +18,7 @@ interface IUserBox extends Document {
     playlists: Sorting
   }
   sectionVisibility: Visibility
-  subSections: { type: string, name: string, index: number, items: Artist[] | Album[] | Track[] | Playlist[] }[]
+  subSections: { _id: string ,type: string, name: string, index: number, items: Artist[] | Album[] | Track[] | Playlist[] }[]
   notes: { itemId: string, noteText: string }[]
   isDeletedByUser?: boolean
 }
