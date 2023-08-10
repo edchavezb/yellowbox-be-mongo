@@ -150,14 +150,14 @@ routes.post("/:boxId/clone", async (req, res) => {
 routes.put("/:boxId/boxInfo", async (req, res) => {
   try {
     const { boxId } = req.params;
-    const { name, publicBool, description } = req.body;
+    const { name, isPublic, description } = req.body;
 
     const updatedBox: IUserBox | null = await BoxModel.findOneAndUpdate(
       { _id: boxId as string },
       {
         $set: {
           name: name,
-          public: publicBool,
+          public: isPublic,
           description: description
         }
       },
