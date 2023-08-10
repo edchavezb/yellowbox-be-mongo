@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { BoxModel, IUserBox } from "../models/box";
-import { UserModel, IUser } from "../models/user";
-import { FolderModel, IUserFolder } from "../models/folder";
-import authenticate from "../middleware/autenticate"
+import { BoxModel, IUserBox } from "../../models/box";
+import { UserModel, IUser } from "../../models/user";
+import { FolderModel, IUserFolder } from "../../models/folder";
+import authenticate from "../../middleware/autenticate"
 
 const routes = Router();
 

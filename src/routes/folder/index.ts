@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { FolderModel, IUserFolder } from "../models/folder";
-import { UserModel } from "../models/user";
-import { extractArrayQueryParam } from "../helpers";
+import { FolderModel, IUserFolder } from "../../models/folder";
+import { UserModel } from "../../models/user";
+import { extractArrayQueryParam } from "../../helpers";
 import mongoose from "mongoose";
 
 const routes = Router();
