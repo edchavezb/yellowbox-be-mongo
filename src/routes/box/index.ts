@@ -135,6 +135,30 @@ routes.put("/:boxId/sectionSorting", async (req, res) => {
   }
 });
 
+routes.put("/:boxId/boxInfo", async (req, res) => {
+  try {
+    const { boxId } = req.params;
+    const { name, publicBool, description } = req.body;
+
+    const updatedBox: IUserBox | null = await BoxModel.findOneAndUpdate(
+      { _id: boxId as string },
+      {
+        $set: {
+          name: name,
+          public: publicBool,
+          description: description
+        }
+      },
+      { new: true }
+    ).exec();
+    
+    return res.status(201).json(updatedBox);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
 // Add a note to the notes in a box
 routes.post("/:boxId/notes", async (req, res) => {
   try {
