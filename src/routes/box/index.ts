@@ -117,24 +117,36 @@ routes.put("/:boxId/delete", async (req, res) => {
   }
 });
 
-// Update a box's section sorting settings
-routes.put("/:boxId/sectionSorting", async (req, res) => {
+// Clone a box
+routes.post("/:boxId/clone", async (req, res) => {
   try {
     const { boxId } = req.params;
-    const updatedSorting: SectionSorting = req.body;
+    const { name, description, isPublic, creator } = req.body;
 
-    const updatedBox: IUserBox | null = await BoxModel.findOneAndUpdate(
-      { _id: boxId as string },
-      { sectionSorting: updatedSorting },
-      { new: true }
-    ).exec();
-    return res.status(201).json(updatedBox?.sectionSorting);
+    const originalBox: IUserBox | null = await BoxModel.findById(boxId);
+    if (!originalBox) {
+      return res.status(404).json({ message: "Box not found." });
+    }
+    
+    const {_id, ...originalBoxNoId} = originalBox.toObject();
+    const newBox = {
+      ...originalBoxNoId,
+      name: name,
+      description: description,
+      public: isPublic,
+      creator: creator
+    };
+
+    const createdBox: IUserBox = await BoxModel.create(newBox);
+
+    return res.status(201).json({ boxId: createdBox._id, boxName: createdBox.name });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Sorry, something went wrong :/" });
   }
 });
 
+// Update a box's information
 routes.put("/:boxId/boxInfo", async (req, res) => {
   try {
     const { boxId } = req.params;
@@ -153,6 +165,24 @@ routes.put("/:boxId/boxInfo", async (req, res) => {
     ).exec();
     
     return res.status(201).json(updatedBox);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
+// Update a box's section sorting settings
+routes.put("/:boxId/sectionSorting", async (req, res) => {
+  try {
+    const { boxId } = req.params;
+    const updatedSorting: SectionSorting = req.body;
+
+    const updatedBox: IUserBox | null = await BoxModel.findOneAndUpdate(
+      { _id: boxId as string },
+      { sectionSorting: updatedSorting },
+      { new: true }
+    ).exec();
+    return res.status(201).json(updatedBox?.sectionSorting);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Sorry, something went wrong :/" });
