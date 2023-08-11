@@ -138,6 +138,15 @@ routes.post("/:boxId/clone", async (req, res) => {
     };
 
     const createdBox: IUserBox = await BoxModel.create(newBox);
+    await UserModel.findByIdAndUpdate(
+      createdBox!.creator,
+      {
+        $push: {
+          dashboardBoxes: createdBox._id
+        }
+      },
+      { new: true }
+    ).exec();
 
     return res.status(201).json({ boxId: createdBox._id, boxName: createdBox.name });
   } catch (error) {
