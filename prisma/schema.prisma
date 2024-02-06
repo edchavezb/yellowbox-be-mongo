@@ -2,10 +2,237 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["relationJoins"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model User {
+  user_id                 String                     @id @default(uuid()) @db.Uuid
+  firebase_id             String
+  username                String
+  first_name              String
+  last_name               String
+  image_url               String
+  linked_services         Json
+  account_management_data UserAccountManagementData?
+  billing                 UserBilling?
+  folders                 Folder[]
+  boxes                   Box[]
+}
+
+model UserAccountManagementData {
+  account_management_id String   @id @default(uuid()) @db.Uuid
+  user_id               String   @unique @db.Uuid
+  account_tier          String
+  sign_up_date          DateTime
+  email_verified        Boolean
+  email                 String
+  show_tutorial         Boolean
+  user                  User     @relation(fields: [user_id], references: [user_id])
+}
+
+model UserBilling {
+  user_billing_id            String @id @default(uuid()) @db.Uuid
+  user_id                    String @unique @db.Uuid
+  stripe_customer_id         String
+  stripe_subscription_id     String
+  stripe_subscription_status String
+  stripe_price_id            String
+  stripe_product_id          String
+  user                       User   @relation(fields: [user_id], references: [user_id])
+}
+
+model Folder {
+  folder_id   String  @id @default(uuid()) @db.Uuid
+  creator_id  String  @db.Uuid
+  name        String
+  description String
+  public      Boolean
+  creator     User    @relation(fields: [creator_id], references: [user_id])
+  boxes       Box[]
+}
+
+model Box {
+  box_id      String          @id @default(uuid()) @db.Uuid
+  creator_id  String          @db.Uuid
+  folder_id   String          @db.Uuid
+  position    Int
+  name        String
+  description String
+  public      Boolean
+  isDeleted   Boolean
+  creator     User            @relation(fields: [creator_id], references: [user_id])
+  folder      Folder          @relation(fields: [folder_id], references: [folder_id])
+  artists     BoxArtist[]
+  tracks      BoxTrack[]
+  albums      BoxAlbum[]
+  playlists   BoxPlaylist[]
+  subsections BoxSubsection[]
+}
+
+model BoxArtist {
+  artist_id String @db.Uuid
+  box_id    String @db.Uuid
+  position  Int
+  note      String
+  artist    Artist @relation(fields: [artist_id], references: [artist_id])
+  box       Box    @relation(fields: [box_id], references: [box_id])
+
+  @@id([artist_id, box_id])
+}
+
+model BoxTrack {
+  track_id String @db.Uuid
+  box_id   String @db.Uuid
+  position Int
+  note     String
+  track    Track  @relation(fields: [track_id], references: [track_id])
+  box      Box    @relation(fields: [box_id], references: [box_id])
+
+  @@id([track_id, box_id])
+}
+
+model BoxAlbum {
+  album_id String @db.Uuid
+  box_id   String @db.Uuid
+  position Int
+  note     String
+  album    Album  @relation(fields: [album_id], references: [album_id])
+  box      Box    @relation(fields: [box_id], references: [box_id])
+
+  @@id([album_id, box_id])
+}
+
+model BoxPlaylist {
+  playlist_id String   @db.Uuid
+  box_id      String   @db.Uuid
+  position    Int
+  note        String
+  playlist    Playlist @relation(fields: [playlist_id], references: [playlist_id])
+  box         Box      @relation(fields: [box_id], references: [box_id])
+
+  @@id([playlist_id, box_id])
+}
+
+model BoxSubsection {
+  subsection_id   Int                     @id @default(autoincrement())
+  box_id          String                  @db.Uuid
+  item_type       String
+  subsection_name String
+  position        Int
+  box             Box                     @relation(fields: [box_id], references: [box_id])
+  artists         BoxSubsectionArtist[]
+  albums          BoxSubsectionAlbum[]
+  tracks          BoxSubsectionTrack[]
+  playlists       BoxSubsectionPlaylist[]
+}
+
+model BoxSubsectionArtist {
+  artist_id         String        @db.Uuid
+  box_subsection_id Int
+  position          Int
+  note              String
+  artist            Artist        @relation(fields: [artist_id], references: [artist_id])
+  box_subsection    BoxSubsection @relation(fields: [box_subsection_id], references: [subsection_id])
+
+  @@id([artist_id, box_subsection_id])
+}
+
+model BoxSubsectionAlbum {
+  album_id          String        @db.Uuid
+  box_subsection_id Int
+  position          Int
+  note              String
+  album             Album         @relation(fields: [album_id], references: [album_id])
+  box_subsection    BoxSubsection @relation(fields: [box_subsection_id], references: [subsection_id])
+
+  @@id([album_id, box_subsection_id])
+}
+
+model BoxSubsectionTrack {
+  track_id          String        @db.Uuid
+  box_subsection_id Int
+  position          Int
+  note              String
+  track             Track         @relation(fields: [track_id], references: [track_id])
+  box_subsection    BoxSubsection @relation(fields: [box_subsection_id], references: [subsection_id])
+
+  @@id([track_id, box_subsection_id])
+}
+
+model BoxSubsectionPlaylist {
+  playlist_id       String        @db.Uuid
+  box_subsection_id Int
+  position          Int
+  note              String
+  playlist          Playlist      @relation(fields: [playlist_id], references: [playlist_id])
+  box_subsection    BoxSubsection @relation(fields: [box_subsection_id], references: [subsection_id])
+
+  @@id([playlist_id, box_subsection_id])
+}
+
+model Artist {
+  artist_id       String                @id @default(uuid()) @db.Uuid
+  spotify_url     String
+  spotify_id      String
+  spotify_uri     String
+  name            String
+  popularity      Int
+  genres          String[]
+  type            String
+  box_subsections BoxSubsectionArtist[]
+  boxes           BoxArtist[]
+}
+
+model Album {
+  album_id        String               @id @default(uuid()) @db.Uuid
+  spotify_url     String
+  spotify_id      String
+  spotify_uri     String
+  images          Json
+  album_type      String
+  artists         Json
+  release_date    String
+  total_tracks    Int
+  type            String
+  box_subsections BoxSubsectionAlbum[]
+  boxes           BoxAlbum[]
+}
+
+model Playlist {
+  playlist_id     String                  @id @default(uuid()) @db.Uuid
+  name            String
+  description     String
+  spotify_url     String
+  spotify_id      String
+  spotify_uri     String
+  owner_name      String
+  owner_uri       String
+  images          Json
+  type            String
+  total_tracks    Int
+  box_subsections BoxSubsectionPlaylist[]
+  boxes           BoxPlaylist[]
+}
+
+model Track {
+  track_id        String               @id @default(uuid()) @db.Uuid
+  spotify_url     String
+  spotify_id      String
+  spotify_uri     String
+  name            String
+  artists         Json
+  album_name      String
+  album_id        String
+  duration_ms     Int
+  explicit        String
+  popularity      Int
+  type            String
+  box_subsections BoxSubsectionTrack[]
+  boxes           BoxTrack[]
 }
