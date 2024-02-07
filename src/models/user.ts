@@ -5,7 +5,8 @@ import { UserAccountData, UserBilling } from "../types/interfaces";
 interface IUser extends Document {
     firebaseId: string,
     username: string
-    displayName: string
+    firstName?: string
+    lastName?: string
     image: string
     account: UserAccountData
     billing: UserBilling

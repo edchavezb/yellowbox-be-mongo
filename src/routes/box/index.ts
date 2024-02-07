@@ -17,7 +17,7 @@ routes.get("/", async (req, res) => {
       { isDeletedByUser: 0 }
     ).exec();
     const creator = await UserModel.findById(box?.creator)
-    return res.status(201).json({ boxData: box, creatorName: creator?.displayName });
+    return res.status(201).json({ boxData: box, creatorName: creator?.username });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Sorry, something went wrong :/" });

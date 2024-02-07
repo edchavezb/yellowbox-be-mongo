@@ -14,7 +14,7 @@ routes.get("/", async (req, res) => {
       { _id: folderId as string }
     ).exec();
     const creator = await UserModel.findById(folder?.creator)
-    return res.status(201).json({folderData: folder, creatorName: creator?.displayName});
+    return res.status(201).json({folderData: folder, creatorName: creator?.username});
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Sorry, something went wrong :/" });
