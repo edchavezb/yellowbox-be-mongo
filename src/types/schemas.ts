@@ -189,7 +189,11 @@ export const UserSchema = new Schema({
         type: String,
         unique: true,
     },
-    displayName: {
+    firstName: {
+        type: String,
+        unique: false,
+    },
+    lastName: {
         type: String,
         unique: false,
     },
