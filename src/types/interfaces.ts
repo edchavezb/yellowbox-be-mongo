@@ -1,5 +1,7 @@
 export interface UserCreateRequest {
-  displayName: string
+  username: string
+  firstName: string
+  lastName: string
   image: string
   email: string
   services: {
@@ -15,7 +17,9 @@ export interface User {
 }
 
 export interface UserData {
-  displayName: string
+  username: string
+  firstName: string
+  lastName: string
   userId: string
   uri: string
   image: string
