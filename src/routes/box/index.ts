@@ -127,8 +127,8 @@ routes.post("/:boxId/clone", async (req, res) => {
     if (!originalBox) {
       return res.status(404).json({ message: "Box not found." });
     }
-    
-    const {_id, ...originalBoxNoId} = originalBox.toObject();
+
+    const { _id, ...originalBoxNoId } = originalBox.toObject();
     const newBox = {
       ...originalBoxNoId,
       name: name,
@@ -172,7 +172,7 @@ routes.put("/:boxId/boxInfo", async (req, res) => {
       },
       { new: true }
     ).exec();
-    
+
     return res.status(201).json(updatedBox);
   } catch (error) {
     console.error(error);
@@ -350,28 +350,35 @@ routes.delete("/:boxId/subsections/:subsectionId", async (req, res) => {
   try {
     const { boxId, subsectionId } = req.params;
     const { section } = req.query;
-    await BoxModel.findByIdAndUpdate(
+    const affectedBox = await BoxModel.findByIdAndUpdate(
       boxId,
       {
         $pull: {
           subSections: { _id: subsectionId }
         }
       },
-      { new: true }
+      { new: false }
     ).exec();
-    const updatedBox: IUserBox | null = await BoxModel.findByIdAndUpdate(
-      boxId,
-      {
-        $unset: {
-          [`${section}.$[elem].subSection`]: ""
+    const affectedSubsection = affectedBox?.subSections.find(sub => `${sub._id}` === subsectionId);
+    if (affectedBox && affectedSubsection) {
+      const affectedElementIds = (affectedSubsection.items as any[]).map(item => item.id);
+      const updatedBox: IUserBox | null = await BoxModel.findByIdAndUpdate(
+        boxId,
+        {
+          $inc: {
+            [`${section}.$[elem].subSectionCount`]: -1
+          }
+        },
+        { 
+          arrayFilters: [ { "elem.id": { $in: affectedElementIds } } ],
+          new: true 
         }
-      },
-      {
-        arrayFilters: [{ "elem.subSection": subsectionId }],
-        new: true
-      }
-    ).exec();
-    return res.status(201).json(updatedBox);
+      ).exec();
+      return res.status(201).json(updatedBox);
+    }
+    else {
+      return res.status(404).json("Failed to complete operation");
+    }
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Sorry, something went wrong :/" });
