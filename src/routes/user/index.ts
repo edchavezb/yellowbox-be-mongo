@@ -24,11 +24,23 @@ routes.get("/me", authenticate, async (req, res) => {
 // });
 
 // Check if username exists
-routes.get("/check/:username", async (req, res) => {
+routes.get("/checkUsername/:username", async (req, res) => {
   try {
     const { username } = req.params;
     const usernameCount = await UserModel.countDocuments({username});
     return res.status(201).json({usernameExists: !!usernameCount});
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
+// Check if email exists
+routes.get("/checkEmail/:email", async (req, res) => {
+  try {
+    const { email } = req.params;
+    const emailCount = await UserModel.countDocuments({email});
+    return res.status(201).json({emailExists: !!emailCount});
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Sorry, something went wrong :/" });
@@ -94,6 +106,24 @@ routes.post("/:userId/spotify", async (req, res) => {
       { new: true }
     ).exec();
     return res.status(201).json(updatedUser);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Sorry, something went wrong :/" });
+  }
+});
+
+// Unlink a user's Spotify account
+routes.post("/:userId/spotify/unlink", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const updatedUser = await UserModel.findOneAndUpdate(
+      { _id: userId },
+      { $unset: { 'services.spotify': "" } },
+      { new: true }
+    ).exec();
+    
+    return res.status(200).json(updatedUser?.services);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Sorry, something went wrong :/" });
