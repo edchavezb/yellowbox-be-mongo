@@ -215,7 +215,7 @@ routes.delete("/:folderId/boxes/:boxId", async (req, res) => {
 });
 
 // Move a box between folders
-routes.put("/:sourceId/boxes/:boxId", async (req, res) => {
+routes.put("/:sourceId/boxes/:boxId/move", async (req, res) => {
   try {
     const { sourceId, boxId } = req.params;
     const { targetId, boxName } = req.body;
